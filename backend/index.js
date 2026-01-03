@@ -7,6 +7,8 @@ import cors from "cors";
 import bcrypt from "bcryptjs";
 
 import authRouter from "./src/routes/authRoute.js";
+import hrRoute from "./src/routes/hrRoute.js";
+import employeeRoute from "./src/routes/employeeRoute.js";
 
 // ✅ IMPORT THE SINGLE PRISMA INSTANCE
 import prisma from "./src/config/prisma.js";
@@ -31,6 +33,13 @@ app.get("/", (req, res) => {
 
 // auth routes
 app.use("/api/auth", authRouter);
+
+// hr routes
+app.use("/api/hr", hrRoute);
+
+
+app.use("/api/employee", employeeRoute);
+
 
 /**
  * ✅ Create a test user

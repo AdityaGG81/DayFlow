@@ -202,13 +202,15 @@ export const login = async (req, res) => {
 
     const token = generateToken(user.id);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite:
-        process.env.NODE_ENV === "production" ? "None" : "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+const isProd = process.env.NODE_ENV === "production";
+
+res.cookie("token", token, {
+  httpOnly: true,
+  secure: isProd,                 // true only in prod (https)
+  sameSite: isProd ? "None" : "Lax", // ✅ Lax in dev
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
+
 
     const { password: _, ...safeUser } = user;
 
@@ -228,8 +230,15 @@ export const login = async (req, res) => {
  */
 export const logout = async (req, res) => {
   try {
-    res.clearCookie("token");
+    const isProd = process.env.NODE_ENV === "production";
+
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "None" : "Lax",
+    });
     return res.status(200).json({ message: "logout successfully" });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "logout error" });
@@ -323,11 +332,14 @@ export const getMe = async (req, res) => {
     }
 
     return res.status(200).json({
-      user: {
-        ...user,
-        role: apiRoleFromDb(user.role),
-      },
-    });
+  success: true,
+  message: "User fetched",
+  data: {
+    ...user,
+    role: apiRoleFromDb(user.role),
+  },
+});
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
