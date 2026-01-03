@@ -3,10 +3,9 @@ import logo from "../assets/logo.jpg";
 import google from "../assets/google.png";
 import { IoEye, IoEyeOff } from "react-icons/io5";
 import { useNavigate, useLocation } from "react-router-dom";
-import { serverUrl } from "../App";
 import { toast } from "react-toastify";
 import ClipLoader from "react-spinners/ClipLoader";
-import axios from "axios";
+import client from "../api/client";
 
 function Login() {
   const [show, setShow] = useState(false);
@@ -26,35 +25,38 @@ function Login() {
     try {
       setLoading(true);
 
-      const res = await axios.post(
-        `${serverUrl}/api/auth/login`,
-        {
-          loginIdOrEmail, // ✅ REQUIRED BY BACKEND
-          password,
-        },
-        { withCredentials: true }
-      );
+      // Step 1: Login
+      await client.post("/api/auth/login", {
+        loginIdOrEmail,
+        password,
+      });
 
-      setLoading(false);
+      // Step 2: Get user info
+      const resMe = await client.get("/api/auth/me");
+
+      // backend returns { success, message, data }
+      const userRole = resMe.data?.data?.role;
+
       toast.success("Login successful");
 
-      // 🔐 force password change if required
-      if (res.data?.requiresPasswordChange) {
-        navigate("/change-password");
+      if (userRole === "HR" || userRole === "ADMIN") {
+        navigate("/hr");
       } else {
-        navigate("/");
+        navigate("/employee");
       }
+
     } catch (error) {
-      setLoading(false);
       toast.error(
         error?.response?.data?.message ||
           "Invalid Login ID / Email or Password"
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${serverUrl}/api/auth/google`;
+    window.location.href = `${import.meta.env.VITE_SERVER_URL}/api/auth/google`;
   };
 
   // Handle google login error redirect

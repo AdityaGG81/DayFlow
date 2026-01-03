@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { serverUrl } from "../App";
+import client from "../api/client";
 
 function Home() {
   const [loading, setLoading] = useState(false);
@@ -13,10 +12,7 @@ function Home() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(
-          serverUrl + "/api/auth/me",
-          { withCredentials: true }
-        );
+        const res = await client.get("/api/auth/me");
         setName(res.data.user.name);
       } catch (error) {
         // not logged in → redirect
@@ -30,11 +26,7 @@ function Home() {
   const handleLogout = async () => {
     try {
       setLoading(true);
-      await axios.post(
-        serverUrl + "/api/auth/logout",
-        {},
-        { withCredentials: true }
-      );
+      await client.post("/api/auth/logout", {});
       toast.success("Logged out successfully");
       navigate("/login");
     } catch (error) {
